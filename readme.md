@@ -65,6 +65,13 @@ app-notes/
 ```
 
 ## 4# SQL de criação de tabela + registros
+
+
+criar os arquivos com o mesmo conteúdo:
+```jshelllanguage
+cp sql/notes.sql tests/testdata/notes.sql
+```
+
 ```shell
 -- DDL: tabela notes
 CREATE TABLE IF NOT EXISTS notes (
@@ -131,5 +138,35 @@ INSERT INTO notes (
     NOW(),
     NULL
 );
+```
 
+## 5# Docker compose
+5# Docker Compose para desenvolvimento (docker-compose.yaml)
+```dockerfile
+version: "3.9"
+
+services:
+  notes-db:
+    image: postgres:latest
+    container_name: notes-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: notes-db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"   # host:container
+    # scripts DDL + seeds
+    volumes:
+      - ./sql:/docker-entrypoint-initdb.d
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+```
+
+rodando o banco de dados
+```jshelllanguage
+docker compose up -d
 ```
