@@ -18,3 +18,17 @@ go get github.com/google/uuid@v1.6.0
 go get github.com/aws/aws-lambda-go@v1.48.0
 go get github.com/awslabs/aws-lambda-go-api-proxy@v0.16.2
 ```
+
+## 3# Estrutura padrão
+```jshelllanguage
+mkdir -p cmd/api
+mkdir -p cmd/lambda
+
+mkdir -p internal/config
+mkdir -p internal/db
+mkdir -p internal/http
+mkdir -p internal/notes
+
+mkdir -p sql
+mkdir -p tests/testdata
+```
