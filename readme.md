@@ -514,3 +514,4 @@ func (r *gormRepository) GetAll(ctx context.Context) ([]*Note, error) {
 	return res, nil
 }
 ```
+###
