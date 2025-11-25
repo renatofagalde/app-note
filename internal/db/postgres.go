@@ -8,14 +8,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type gormDatabase struct {
-	db *gorm.DB
-}
-
-func (d *gormDatabase) Gorm() *gorm.DB {
-	return d.db
-}
-
 func NewPostgres(cfg Config) (Database, error) {
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
