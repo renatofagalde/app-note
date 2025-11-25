@@ -234,6 +234,7 @@ func mustInt(s string) int {
 ## 7# GORM 
 
 arquivo de interface
+``internal/db/database.go``
 
 ```go
 package db
@@ -256,6 +257,7 @@ type Database interface {
 ```
 
 postgres:
+``internal/db/postgres.go``
 ```go
 package db
 
@@ -309,6 +311,7 @@ func NewPostgres(cfg Config) (Database, error) {
 ```
 
 mysql
+``internal/db/mysql.go``
 ````go
 package db
 
@@ -354,3 +357,160 @@ func NewMySQL(cfg Config) (Database, error) {
 }
 
 ````
+
+## 8# Domínio
+
+``internal/notes/model.go``
+
+````go
+package notes
+
+import (
+	"time"
+
+	"gorm.io/datatypes"
+)
+
+type Note struct {
+	ID        string         `gorm:"type:text;primaryKey"       json:"id"`
+	Name      string         `gorm:"type:varchar(255);not null" json:"name"`
+	Content   datatypes.JSON `gorm:"type:jsonb;not null"        json:"content"`
+	CreatedAt time.Time      `gorm:"autoCreateTime"             json:"created_at"`
+	UpdatedAt time.Time      `gorm:"autoUpdateTime"             json:"updated_at"`
+	DeletedAt *time.Time     `gorm:"index"                      json:"deleted_at,omitempty"`
+}
+
+type CreateNoteRequest struct {
+	Name    string         `json:"name"`
+	Content datatypes.JSON `json:"content"`
+}
+
+type NoteResponse struct {
+	ID        string         `json:"id"`
+	Name      string         `json:"name"`
+	Content   datatypes.JSON `json:"content"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt *time.Time     `json:"deleted_at,omitempty"`
+}
+
+func (n *Note) ToResponse() *NoteResponse {
+	return &NoteResponse{
+		ID:        n.ID,
+		Name:      n.Name,
+		Content:   n.Content,
+		CreatedAt: n.CreatedAt,
+		UpdatedAt: n.UpdatedAt,
+		DeletedAt: n.DeletedAt,
+	}
+}
+
+````
+
+## 9# Repository
+
+```markdown
+internal/notes/
+  ├── repository.go        ← interface + struct base
+  ├── repository_create.go ← Create()
+  ├── repository_get.go    ← GetByID()
+  ├── repository_list.go   ← GetAll()
+  └── note.go              ← struct Note
+```
+
+````markdown
+package notes
+
+import (
+	"context"
+	"errors"
+
+	"gorm.io/gorm"
+)
+
+var (
+	ErrNoteNotFound = errors.New("note not found")
+)
+
+type Repository interface {
+	Create(ctx context.Context, n *Note) error
+	GetByID(ctx context.Context, id string) (*Note, error)
+	GetAll(ctx context.Context) ([]*Note, error)
+}
+
+type gormRepository struct {
+	db *gorm.DB
+}
+
+func NewGormRepository(db *gorm.DB) Repository {
+	return &gormRepository{db: db}
+}
+
+````
+
+``create``
+```markdown
+package notes
+
+import "context"
+
+func (r *gormRepository) Create(ctx context.Context, n *Note) error {
+	return r.db.WithContext(ctx).Create(n).Error
+}
+```
+
+``get``
+```markdown
+package notes
+
+import (
+	"context"
+	"errors"
+
+	"gorm.io/gorm"
+)
+
+func (r *gormRepository) GetByID(ctx context.Context, id string) (*Note, error) {
+	var note Note
+
+	err := r.db.WithContext(ctx).
+		Where("id = ? AND deleted_at IS NULL", id).
+		First(&note).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, ErrNoteNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &note, nil
+}
+```
+
+``get_all``
+```markdown
+package notes
+
+import "context"
+
+func (r *gormRepository) GetAll(ctx context.Context) ([]*Note, error) {
+	var notes []Note
+
+	err := r.db.WithContext(ctx).
+		Where("deleted_at IS NULL").
+		Order("created_at DESC").
+		Find(&notes).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*Note, 0, len(notes))
+	for i := range notes {
+		res = append(res, &notes[i])
+	}
+
+	return res, nil
+}
+```
