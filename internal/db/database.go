@@ -14,3 +14,11 @@ type Config struct {
 type Database interface {
 	Gorm() *gorm.DB
 }
+
+type gormDatabase struct {
+	db *gorm.DB
+}
+
+func (d *gormDatabase) Gorm() *gorm.DB {
+	return d.db
+}
