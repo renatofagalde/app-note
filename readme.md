@@ -14,6 +14,7 @@ go mod init bootstrap
 go get github.com/gin-gonic/gin@v1.10.0
 go get gorm.io/gorm@v1.25.9
 go get gorm.io/driver/postgres@v1.5.7
+go get gorm.io/driver/mysql
 go get github.com/google/uuid@v1.6.0
 go get github.com/aws/aws-lambda-go@v1.48.0
 go get github.com/awslabs/aws-lambda-go-api-proxy@v0.16.2
