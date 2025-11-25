@@ -8,8 +8,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// Reaproveita o mesmo gormDatabase
-
 func NewMySQL(cfg Config) (Database, error) {
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%d)/%s?parseTime=true",
