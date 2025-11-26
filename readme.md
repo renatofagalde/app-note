@@ -18,6 +18,8 @@ go get gorm.io/driver/mysql
 go get github.com/google/uuid@v1.6.0
 go get github.com/aws/aws-lambda-go@v1.48.0
 go get github.com/awslabs/aws-lambda-go-api-proxy@v0.16.2
+go get github.com/renatofagalde/module-bitly@lates
+go get github.com/google/uuid
 ```
 
 ## 3# Estrutura padrão
@@ -412,10 +414,10 @@ func (n *Note) ToResponse() *NoteResponse {
 ```markdown
 internal/notes/
   ├── repository.go        ← interface + struct base
-  ├── repository_create.go ← Create()
-  ├── repository_get.go    ← GetByID()
-  ├── repository_list.go   ← GetAll()
-  └── note.go              ← struct Note
+  ├── repository/repository_create.go ← Create()
+  ├── repository/repository_get.go    ← GetByID()
+  ├── repository/repository_list.go   ← GetAll()
+  └── model.go              ← struct Note
 ```
 
 ````markdown
@@ -511,6 +513,104 @@ func (r *gormRepository) GetAll(ctx context.Context) ([]*Note, error) {
 		res = append(res, &notes[i])
 	}
 
+	return res, nil
+}
+```
+
+## 10# Usecase e Service
+
+```markdown
+internal/
+ └── notes/
+      ├── usecase.go            ← interface, somente contratos
+      ├── service/              ← implementação concreta
+      ├── service/service.go    ← interface do repo
+```
+
+``internal/notes/repository/create.go``
+
+````markdown
+package usecase
+
+import (
+	"bootstrap/internal/notes/models"
+	"context"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+	bitly "github.com/renatofagalde/module-bitly"
+)
+
+func (usecase *notesUsecase) CreateNote(ctx context.Context, note *models.CreateNoteRequest) (*models.NoteResponse, error) {
+
+	var name string = strings.TrimSpace(note.Name)
+	if len(name) < 1 || len(note.Content) < 1 {
+		return nil, errInvalidInput
+	}
+
+	var n *models.Note = &models.Note{
+		ID:        bitly.EncodeBytes([]byte(uuid.NewString())),
+		Name:      name,
+		Content:   note.Content,
+		CreatedAt: time.Time{},
+		UpdatedAt: time.Time{},
+		DeletedAt: nil,
+	}
+
+	if err := usecase.repository.Create(ctx, n); err != nil {
+		return nil, err
+	}
+
+	return n.ToResponse(), nil
+}
+
+````
+
+
+``internal/notes/usecase/get.go``
+```markdown
+package usecase
+
+import (
+	"bootstrap/internal/notes/models"
+	"context"
+)
+
+func (usecase *notesUsecase) GetNote(ctx context.Context, id string) (*models.NoteResponse, error) {
+
+	if len(id) < 1 {
+		return nil, errInvalidInput
+	}
+
+	n, err := usecase.repository.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return n.ToResponse(), nil
+}
+
+```
+
+``internal/notes/usecase/get_all.go``
+```markdown
+package usecase
+
+import (
+	"bootstrap/internal/notes/models"
+	"context"
+)
+
+func (usecase *notesUsecase) ListNotes(ctx context.Context) ([]*models.NoteResponse, error) {
+	notes, err := usecase.repository.GetAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make([]*models.NoteResponse, 0, len(notes))
+	for _, n := range notes {
+		res = append(res, n.ToResponse())
+	}
 	return res, nil
 }
 ```
