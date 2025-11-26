@@ -10,7 +10,6 @@ import (
 
 func (r *gormRepository) GetByID(ctx context.Context, id string) (*models.Note, error) {
 	var note models.Note
-
 	err := r.db.WithContext(ctx).
 		Where("id = ? AND deleted_at IS NULL", id).
 		First(&note).Error
