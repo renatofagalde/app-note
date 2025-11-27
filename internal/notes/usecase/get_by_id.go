@@ -8,7 +8,7 @@ import (
 func (usecase *notesUsecase) GetNote(ctx context.Context, id string) (*models.NoteResponse, error) {
 
 	if len(id) < 1 {
-		return nil, errInvalidInput
+		return nil, ErrInvalidInput
 	}
 
 	n, err := usecase.repository.GetByID(ctx, id)

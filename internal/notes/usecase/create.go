@@ -14,7 +14,7 @@ func (usecase *notesUsecase) CreateNote(ctx context.Context, note *models.Create
 
 	var name string = strings.TrimSpace(note.Name)
 	if len(name) < 1 || len(note.Content) < 1 {
-		return nil, errInvalidInput
+		return nil, ErrInvalidInput
 	}
 
 	var n *models.Note = &models.Note{
