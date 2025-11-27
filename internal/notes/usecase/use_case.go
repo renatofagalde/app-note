@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	errInvalidInput = errors.New("invalid input")
+	ErrInvalidInput = errors.New("invalid input")
 )
 
 type UseCase interface {
