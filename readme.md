@@ -420,7 +420,7 @@ internal/notes/
   └── model.go              ← struct Note
 ```
 
-````markdown
+````go
 package notes
 
 import (
@@ -451,7 +451,7 @@ func NewGormRepository(db *gorm.DB) Repository {
 ````
 
 ``create``
-```markdown
+```go
 package notes
 
 import "context"
@@ -462,7 +462,7 @@ func (r *gormRepository) Create(ctx context.Context, n *Note) error {
 ```
 
 ``get``
-```markdown
+```go
 package notes
 
 import (
@@ -491,7 +491,7 @@ func (r *gormRepository) GetByID(ctx context.Context, id string) (*Note, error) 
 ```
 
 ``get_all``
-```markdown
+```go
 package notes
 
 import "context"
@@ -529,7 +529,7 @@ internal/
 
 ``internal/notes/repository/create.go``
 
-````markdown
+````go
 package usecase
 
 import (
@@ -569,7 +569,7 @@ func (usecase *notesUsecase) CreateNote(ctx context.Context, note *models.Create
 
 
 ``internal/notes/usecase/get.go``
-```markdown
+```go
 package usecase
 
 import (
@@ -593,7 +593,7 @@ func (usecase *notesUsecase) GetNote(ctx context.Context, id string) (*models.No
 ```
 
 ``internal/notes/usecase/get_all.go``
-```markdown
+```go
 package usecase
 
 import (
@@ -613,4 +613,225 @@ func (usecase *notesUsecase) ListNotes(ctx context.Context) ([]*models.NoteRespo
 	}
 	return res, nil
 }
+```
+
+
+## 11 HTTP com Gin
+
+``internal\http\router.go``
+
+```go
+package http
+
+import (
+	"bootstrap/internal/notes/usecase"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+type NotesService struct {
+	usecase.UseCase
+}
+
+type RouterConfig struct {
+	NotesService NotesService
+}
+
+func NewRouter(cfg RouterConfig) *gin.Engine {
+	r := gin.Default()
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+
+	notesHandler := NewNotesHandler(cfg.NotesService)
+
+	notesGroup := r.Group("/notes")
+	{
+		notesGroup.POST("", notesHandler.Create)
+		notesGroup.GET("", notesHandler.GetAll)
+		notesGroup.GET("/:id", notesHandler.GetByID)
+	}
+
+	return r
+}
+
+```
+
+``internal/http/notes_handler.go``
+
+```go
+package http
+
+import (
+	"bootstrap/internal/notes/usecase"
+
+	"github.com/gin-gonic/gin"
+)
+
+type NotesHandler interface {
+	Create(c *gin.Context)
+	GetByID(c *gin.Context)
+	GetAll(c *gin.Context)
+}
+
+type notesHandler struct {
+	service usecase.UseCase
+}
+
+func NewNotesHandler(service usecase.UseCase) NotesHandler {
+	return &notesHandler{service: service}
+
+}
+
+```
+
+
+``internal/http/note_create.go``
+
+````go
+package http
+
+import (
+	"bootstrap/internal/notes/models"
+	"bootstrap/internal/notes/usecase"
+	"errors"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+func (n notesHandler) Create(c *gin.Context) {
+
+	var request models.CreateNoteRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid body"})
+		return
+	}
+
+	response, err := n.service.CreateNote(c.Request.Context(), &request)
+	if err != nil {
+		if errors.Is(err, usecase.ErrInvalidInput) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+	c.JSON(http.StatusCreated, response)
+}
+
+````
+
+``internal/http/note_by_id.go``
+````go
+package http
+
+import (
+	"errors"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
+)
+
+func (h *notesHandler) GetByID(c *gin.Context) {
+	id := c.Param("id")
+
+	res, err := h.service.GetNote(c.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+````
+
+``internal/http/note_getall.go``
+
+````go
+package http
+
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+func (h *notesHandler) GetAll(c *gin.Context) {
+	res, err := h.service.ListNotes(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+````
+
+## 12 main.go - normal app
+
+
+``cmd/api/main.go``
+
+```go
+package main
+
+import (
+	"bootstrap/internal/notes/models"
+	"bootstrap/internal/notes/repository"
+	"bootstrap/internal/notes/usecase"
+	"log"
+
+	"bootstrap/internal/config"
+	appdb "bootstrap/internal/db"
+	apphttp "bootstrap/internal/http"
+)
+
+func main() {
+	cfgLoader := config.NewEnvLoader()
+	appCfg, err := cfgLoader.Load()
+	if err != nil {
+		log.Fatalf("failed to load config: %v", err)
+	}
+
+	dbCfg := appdb.Config{
+		Host:     appCfg.PostgresHost,
+		Port:     appCfg.PostgresPort,
+		User:     appCfg.PostgresUser,
+		Password: appCfg.PostgresPassword,
+		DBName:   appCfg.PostgresDB,
+		SSLMode:  appCfg.PostgresSSL,
+	}
+
+	dbInstance, err := appdb.NewPostgres(dbCfg)
+	if err != nil {
+		log.Fatalf("failed to init postgres: %v", err)
+	}
+
+	gormDB := dbInstance.Gorm()
+
+	if err := gormDB.AutoMigrate(&models.Note{}); err != nil {
+		log.Fatalf("failed to migrate: %v", err)
+	}
+
+	repo := repository.NewNoteRepository(gormDB)
+	service := usecase.NewService(repo)
+
+	router := apphttp.NewRouter(apphttp.RouterConfig{NotesService: service})
+
+	log.Printf("API listening on :%s", appCfg.AppPort)
+	if err := router.Run(":" + appCfg.AppPort); err != nil {
+		log.Fatal(err)
+	}
+}
+
 ```

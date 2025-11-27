@@ -1,0 +1,25 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="API" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="app-note" />
+    <working_directory value="$PROJECT_DIR$" />
+    <envs>
+      <env name="APP_PORT" value="8080" />
+      <env name="POSTGRES_HOST" value="localhost" />
+      <env name="POSTGRES_PORT" value="5433" />
+      <env name="POSTGRES_USER" value="user" />
+      <env name="POSTGRES_PASSWORD" value="password" />
+      <env name="POSTGRES_DB" value="notes-db" />
+      <env name="POSTGRES_SSLMODE" value="disable " />
+    </envs>
+    <EXTENSION ID="software.aws.toolkits.jetbrains.core.execution.GoAwsConnectionRunConfigurationExtension">
+      <option name="credential" />
+      <option name="region" />
+      <option name="useCurrentConnection" value="false" />
+    </EXTENSION>
+    <kind value="PACKAGE" />
+    <package value="bootstrap/cmd/api" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/cmd/api/main.go" />
+    <method v="2" />
+  </configuration>
+</component>
