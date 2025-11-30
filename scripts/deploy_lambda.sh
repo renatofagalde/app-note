@@ -57,6 +57,30 @@ if aws lambda get-function --function-name "${LAMBDA_NAME}" >/dev/null 2>&1; the
   aws lambda update-function-code \
     --function-name "${LAMBDA_NAME}" \
     --zip-file "fileb://${ZIP_PATH}"
+
+  echo ">> Aguardando update terminar..."
+
+  for i in {1..30}; do
+    status="$(aws lambda get-function-configuration \
+      --function-name "${LAMBDA_NAME}" \
+      --query 'LastUpdateStatus' \
+      --output text)"
+
+    echo "   Status do update: ${status}"
+
+    if [ "${status}" = "Successful" ]; then
+      echo "✅ Update finalizado."
+      break
+    fi
+
+    if [ "${status}" = "Failed" ]; then
+      echo "❌ Update falhou. Abortando."
+      exit 1
+    fi
+
+    sleep 2
+  done
+
 else
   echo "⚠️ Função não existe. Criando..."
   aws lambda create-function \
@@ -67,10 +91,9 @@ else
     --architectures "x86_64" \
     --zip-file "fileb://${ZIP_PATH}"
 
-  echo ">> Aguardando função sair do estado 'Pending'..."
+  echo ">> Aguardando função sair de Pending..."
 
-  # espera até ficar Active (ou até estourar o timeout simples)
-  for i in {1..20}; do
+  for i in {1..30}; do
     state="$(aws lambda get-function-configuration \
       --function-name "${LAMBDA_NAME}" \
       --query 'State' \
@@ -88,7 +111,7 @@ else
       exit 1
     fi
 
-    sleep 5
+    sleep 2
   done
 fi
 
