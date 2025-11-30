@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bootstrap/internal/notes/models"
 	"bootstrap/internal/notes/repository"
 	"bootstrap/internal/notes/usecase"
 	"log"
@@ -33,10 +32,6 @@ func main() {
 	}
 
 	gormDB := dbInstance.Gorm()
-
-	if err := gormDB.AutoMigrate(&models.Note{}); err != nil {
-		log.Fatalf("failed to migrate: %v", err)
-	}
 
 	repo := repository.NewNoteRepository(gormDB)
 	service := usecase.NewService(repo)
