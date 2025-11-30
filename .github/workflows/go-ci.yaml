@@ -217,7 +217,7 @@ jobs:
       POSTGRES_HOST:    ${{ secrets.PRD_POSTGRES_HOST }}
       POSTGRES_PORT:    ${{ secrets.PRD_POSTGRES_PORT }}
       POSTGRES_USER:    ${{ secrets.PRD_POSTGRES_USER }}
-      POSTGRES_PASSWORD:${{ secrets.PRD_POSTGRES_PASSWORD }}
+      POSTGRES_PASSWORD: ${{ secrets.PRD_POSTGRES_PASSWORD }}
       POSTGRES_DB:      ${{ secrets.PRD_POSTGRES_DB }}
       POSTGRES_SSLMODE: ${{ secrets.PRD_POSTGRES_SSLMODE }}
 
