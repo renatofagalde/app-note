@@ -44,9 +44,10 @@ func TestMain(m *testing.M) {
 	}
 
 	container, err := tc.GenericContainer(ctx, tc.GenericContainerRequest{
-		Request: req,
-		Started: true,
+		ContainerRequest: req,
+		Started:          true,
 	})
+
 	if err != nil {
 		log.Fatalf("falha ao subir container Postgres de teste: %v", err)
 	}
