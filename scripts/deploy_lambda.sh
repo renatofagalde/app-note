@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-LAMBDA_NAME="${LAMBDA_NAME:?LAMBLA_NAME não definido}"
+LAMBDA_NAME="${LAMBDA_NAME:?LAMBDA_NAME não definido}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 LAMBDA_ROLE_NAME="${LAMBDA_ROLE_NAME:-lambda-exec-${LAMBDA_NAME}}"
 ZIP_PATH="${1:-function.zip}"
@@ -52,7 +52,7 @@ echo ">> Role ARN: ${LAMBDA_ROLE_ARN}"
 
 # 3) Criar ou atualizar Lambda
 echo ">> Verificando se Lambda ${LAMBDA_NAME} existe..."
-if aws lambda get-function --function-name "${LAMBLA_NAME}" >/dev/null 2>&1; then
+if aws lambda get-function --function-name "${LAMBDA_NAME}" >/dev/null 2>&1; then
   echo "✅ Função existe. Atualizando código..."
   aws lambda update-function-code \
     --function-name "${LAMBDA_NAME}" \
