@@ -2,6 +2,7 @@ package repository
 
 import (
 	"bootstrap/internal/notes/models"
+	domainerror "bootstrap/internal/shared/errors"
 	"context"
 	"errors"
 
@@ -15,7 +16,7 @@ func (r *gormRepository) GetByID(ctx context.Context, id string) (*models.Note, 
 		First(&note).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, ErrNoteNotFound
+		return nil, domainerror.ErrNotFound
 	}
 	if err != nil {
 		return nil, err
