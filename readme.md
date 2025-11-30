@@ -835,3 +835,8 @@ func main() {
 }
 
 ```
+
+
+## 13 main.go - lambda
+
+````
