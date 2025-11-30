@@ -3,13 +3,8 @@ package repository
 import (
 	"bootstrap/internal/notes/models"
 	"context"
-	"errors"
 
 	"gorm.io/gorm"
-)
-
-var (
-	ErrNoteNotFound = errors.New("note not found")
 )
 
 type Repository interface {

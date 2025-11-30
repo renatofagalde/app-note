@@ -1,11 +1,11 @@
 package http
 
 import (
-	"errors"
 	"net/http"
 
+	domainerror "bootstrap/internal/shared/errors"
+
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 func (h *notesHandler) GetByID(c *gin.Context) {
@@ -13,10 +13,18 @@ func (h *notesHandler) GetByID(c *gin.Context) {
 
 	res, err := h.service.GetNote(c.Request.Context(), id)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
-			return
+
+		if dErr, ok := err.(*domainerror.DomainError); ok {
+			switch dErr.Code {
+			case "NOT_FOUND":
+				c.JSON(http.StatusNotFound, gin.H{"error": dErr})
+				return
+			case "INVALID_INPUT":
+				c.JSON(http.StatusBadRequest, gin.H{"error": dErr})
+				return
+			}
 		}
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}
