@@ -66,7 +66,32 @@ else
     --role "${LAMBDA_ROLE_ARN}" \
     --architectures "x86_64" \
     --zip-file "fileb://${ZIP_PATH}"
+
+  echo ">> Aguardando função sair do estado 'Pending'..."
+
+  # espera até ficar Active (ou até estourar o timeout simples)
+  for i in {1..20}; do
+    state="$(aws lambda get-function-configuration \
+      --function-name "${LAMBDA_NAME}" \
+      --query 'State' \
+      --output text || echo 'Desconhecido')"
+
+    echo "   Estado atual: ${state}"
+
+    if [ "${state}" = "Active" ]; then
+      echo "✅ Função está Active."
+      break
+    fi
+
+    if [ "${state}" = "Failed" ]; then
+      echo "❌ Função entrou em estado Failed. Abortando."
+      exit 1
+    fi
+
+    sleep 5
+  done
 fi
+
 
 # 4) Atualizar env vars
 echo ">> Atualizando variáveis de ambiente..."
@@ -82,5 +107,7 @@ aws lambda update-function-configuration \
     POSTGRES_SSLMODE=\"${POSTGRES_SSLMODE}\",
     APP_ENV=\"${APP_ENV:-dev}\"
   }"
+
+echo "✅ Deploy finalizado para ${LAMBDA_NAME}"
 
 echo "✅ Deploy finalizado para ${LAMBDA_NAME}"
