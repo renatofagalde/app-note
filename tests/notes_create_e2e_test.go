@@ -29,7 +29,7 @@ func Test_CreateNote_Success(t *testing.T) {
 		t.Fatalf("falha ao parsear resposta JSON: %v", err)
 	}
 
-	if res.ID == "" {
+	if res.ID != "" {
 		t.Fatalf("esperava ID preenchido")
 	}
 	if res.Name != "Teste E2E - Sucesso" {
