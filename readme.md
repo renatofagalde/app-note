@@ -20,6 +20,8 @@ go get github.com/aws/aws-lambda-go@v1.48.0
 go get github.com/awslabs/aws-lambda-go-api-proxy@v0.16.2
 go get github.com/renatofagalde/module-bitly@lates
 go get github.com/google/uuid
+go get github.com/testcontainers/testcontainers-go@v0.32.0
+go get github.com/testcontainers/testcontainers-go/wait@v0.32.0
 ```
 
 ## 3# Estrutura padrão
