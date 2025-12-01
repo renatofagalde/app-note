@@ -14,6 +14,8 @@ type RouterConfig struct {
 func NewRouter(cfg RouterConfig) *gin.Engine {
 	r := gin.Default()
 
+	r.Use(CORSMiddleware())
+
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
