@@ -30,8 +30,9 @@ func NewPostgres(cfg Config) (Database, error) {
 	}
 
 	sqlDB.SetMaxOpenConns(2)
-	sqlDB.SetMaxIdleConns(2)
+	sqlDB.SetMaxIdleConns(1)
 	sqlDB.SetConnMaxLifetime(5 * time.Minute)
+	sqlDB.SetConnMaxIdleTime(1 * time.Minute)
 
 	if err := sqlDB.Ping(); err != nil {
 		return nil, err
