@@ -1,0 +1,34 @@
+name: 002 - Qualidade de Código
+run-name: "002 · Qualidade de Código — ${{ github.ref_name }}"
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+
+jobs:
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache: true
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Run unit tests
+        run: go test ./... -race -coverprofile=coverage.out
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
