@@ -1,0 +1,28 @@
+name: 001 - Proteção de Branch
+run-name: "001 · Proteção de Branch — PR #${{ github.event.pull_request.number }}"
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  close-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fechar PR direcionado ao main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_number=${{ github.event.pull_request.number }}
+          repo=${{ github.repository }}
+
+          echo "Fechando PR #$pr_number que aponta para main..."
+
+          curl -X PATCH \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$repo/issues/$pr_number \
+            -d '{
+              "state": "closed",
+              "body": "PRs com base em `main` não são permitidos. Use a branch `develop` como base."
+            }'
