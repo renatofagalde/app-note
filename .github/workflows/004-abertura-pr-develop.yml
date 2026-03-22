@@ -1,0 +1,32 @@
+name: 004 - Abertura de PR para Develop
+run-name: "004 · Abertura de PR — ${{ github.event.workflow_run.head_branch }} → develop"
+
+on:
+  workflow_run:
+    workflows: ["003 - Testes de Integração"]
+    types:
+      - completed
+    branches:
+      - 'feature/**'
+
+jobs:
+  open-pr-to-develop:
+    name: Abrir PR para develop
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Criar PR da feature para develop
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_branch: ${{ github.event.workflow_run.head_branch }}
+          destination_branch: develop
+          pr_title: "Auto PR: ${{ github.event.workflow_run.head_branch }} → develop (tests OK)"
+          pr_body: |
+            PR criado automaticamente porque:
+            - Unit tests ✔
+            - Integration tests (Testcontainers) ✔
