@@ -5,9 +5,6 @@ import (
 	"context"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
-	bitly "github.com/renatofagalde/module-bitly"
 )
 
 func (usecase *notesUsecase) CreateNote(ctx context.Context, note *models.CreateNoteRequest) (*models.NoteResponse, error) {
@@ -18,7 +15,7 @@ func (usecase *notesUsecase) CreateNote(ctx context.Context, note *models.Create
 	}
 
 	var n *models.Note = &models.Note{
-		ID:        bitly.EncodeBytes([]byte(uuid.NewString())),
+		ID:        name,
 		Name:      name,
 		Content:   note.Content,
 		CreatedAt: time.Time{},
