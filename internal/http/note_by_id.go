@@ -28,6 +28,6 @@ func (h *notesHandler) GetByID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal error"})
 		return
 	}
-
+	c.Header("Access-Control-Allow-Origin", "https://likwi.com.br")
 	c.JSON(http.StatusOK, res)
 }
